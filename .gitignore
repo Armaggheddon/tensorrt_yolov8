@@ -1,0 +1,4 @@
+tensorrt_yolov8.egg-info/
+build/
+__pycache__
+examples/*
