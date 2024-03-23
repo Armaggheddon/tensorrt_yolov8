@@ -16,8 +16,8 @@ Then this library is for you! Run yolov8's classification, detection, pose and s
 
 - [Requirements](#requirements)
 - [Installation](#installation)
-    - [Docker](#docker)
-    - [Pip](#pip)
+    - [With Docker](#with-docker)
+    - [With pip](#with-pip)
 - [Sample usage](#sample-usage)
 - [Todos](#todos)
 
@@ -28,42 +28,42 @@ This library makes use of Nvidia's specific features, therefore a Nvidia GPU is 
 
 The easiest way to install/use the library is by using the Nvidia's TensorRT docker image available at Nvidia NGC ([Link](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/tensorrt), the library has been tested on the tensorrt:24.01-py3 image). 
 
-## Docker
+### With Docker
 
-- If not already done, configure docker to use the Nvidia runtime as default by editing the file in `/etc/docker/daemon.json`, add to the first line ([Link](https://docs.nvidia.com/dgx/nvidia-container-runtime-upgrade/index.html#:~:text=Use%20docker%20run%20with%20nvidia,file%20as%20the%20first%20entry.&text=You%20can%20then%20use%20docker%20run%20to%20run%20GPU%2Daccelerated%20containers.)) `"default-runtime": "nvidia"`
+1. If not already done, configure docker to use the Nvidia runtime as default by editing the file in `/etc/docker/daemon.json`, add to the first line ([Link](https://docs.nvidia.com/dgx/nvidia-container-runtime-upgrade/index.html#:~:text=Use%20docker%20run%20with%20nvidia,file%20as%20the%20first%20entry.&text=You%20can%20then%20use%20docker%20run%20to%20run%20GPU%2Daccelerated%20containers.)) `"default-runtime": "nvidia"`
 
-- Copy the content of `Dockerfile` file and build the image with the command:
+1. Copy the content of `Dockerfile` file and build the image with the command:
     ```bash
     $ docker build -t image:tag .
     ```
 
-- Run the image with the command:
+1. Run the image with the command:
     ```bash
     $ docker run -it image:tag
     ```
 
-## Pip
+### With pip
 
-- Clone the repository to your local machine and run the following commands:
+1. Clone the repository to your local machine and run the following commands:
     ```bash
     $ git clone https://github.com/Armaggheddon/tensorrt_yolov8.git
     $ cd tensorrt_yolov8
     $ pip install -U .
     ```
 
-- Alternatively, directly get the library with pip with the command:
+1. Alternatively, directly get the library with pip with the command:
     ```bash
     $ pip install git+https://github.com/Armaggheddon/tensorrt_yolov8.git
     ```
 
-- Uninstall the library with:
+1. Uninstall the library with:
     ```bash
     $ pip uninstall tensorrt_yolov8
     ```
 
 # Sample usage
 
-1. Obtain the ONNX file of the desired yolo model. This can be easily done by using Ultralytics library ([Link](https://github.com/ultralytics/ultralytics)). For example the following commands install and exports yolov8s detection, using the aforementioned library, in the current path (See [Link](https://docs.ultralytics.com/it/models/yolov8/#supported-tasks-and-modes) for a list of available model types):
+1. Obtain the ONNX file of the desired yolo model. This can be easily done by using Ultralytics library ([Link](https://github.com/ultralytics/ultralytics)). For example the following commands installs, downloads and exports the yolov8s detection model in the current path (See [Link](https://docs.ultralytics.com/it/models/yolov8/#supported-tasks-and-modes) for a list of available model types):
     ```bash 
     $ pip install ultralytics
     $ yolo export model=yolov8s.pt format=onnx
