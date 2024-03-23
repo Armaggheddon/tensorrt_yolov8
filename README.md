@@ -7,21 +7,21 @@ Then this library is for you! Run classification, detection, pose and segmentati
 # Index
 
 - [Requirements](#requirements)
-- [Installation](#Installation)
+- [Installation](#installation)
     - [Docker](#docker)
     - [Pip](#pip)
-- [Usage](#usage)
+- [Sample usage](#sample-usage)
 
 # Requirements
-This library makes use of Nvidia's specific features, therefore a Nvidia GPU is required. Additionally a working installation of tensorrt is required ([Link](https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html)). The easiest way to install/use the library is by using the Nvidia's TensorRT docker image available at Nvidia NGC ([Link](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/tensorrt), the library has been tested on the tensorrt:24.01-py3 image)
+This library makes use of Nvidia's specific features, therefore a Nvidia GPU is required. Additionally a working installation of tensorrt is required ([Link](https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html)). 
 
 # Installation
 
+The easiest way to install/use the library is by using the Nvidia's TensorRT docker image available at Nvidia NGC ([Link](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/tensorrt), the library has been tested on the tensorrt:24.01-py3 image). 
+
 ## Docker
 
-- If not already done, configure docker to use the Nvidia runtime as default by editing the file in `/etc/docker/daemon.json`, adding to the first line ([Link](https://docs.nvidia.com/dgx/nvidia-container-runtime-upgrade/index.html#:~:text=Use%20docker%20run%20with%20nvidia,file%20as%20the%20first%20entry.&text=You%20can%20then%20use%20docker%20run%20to%20run%20GPU%2Daccelerated%20containers.)):
-
-    `"default-runtime": "nvidia"`
+- If not already done, configure docker to use the Nvidia runtime as default by editing the file in `/etc/docker/daemon.json`, add to the first line ([Link](https://docs.nvidia.com/dgx/nvidia-container-runtime-upgrade/index.html#:~:text=Use%20docker%20run%20with%20nvidia,file%20as%20the%20first%20entry.&text=You%20can%20then%20use%20docker%20run%20to%20run%20GPU%2Daccelerated%20containers.)) `"default-runtime": "nvidia"`
 
 - Copy the content of `Dockerfile` file and build the image with the command:
     ```bash
@@ -52,4 +52,44 @@ This library makes use of Nvidia's specific features, therefore a Nvidia GPU is 
     $ pip uninstall tensorrt_yolov8
     ```
 
-# Usage
+# Sample usage
+
+1. Obtain the ONNX file of the desired yolo model. This can be easily done by using Ultralytics library ([Link](https://github.com/ultralytics/ultralytics)). For example the following commands install and exports yolov8s detection, using the aforementioned library, in the current path (See [Link](https://docs.ultralytics.com/it/models/yolov8/#supported-tasks-and-modes) for a list of available model types):
+    ```bash 
+    $ pip install ultralytics
+    $ yolo export model=yolov8s.pt format=onnx
+    ```
+
+2. Convert the ONNX model to an Nvidia engine. This can be done using the utility `trtexec` (generally located at `/usr/src/tensorrt/bin/trtexec`) or by using the utility function available in this library with:
+    ```python
+    from tensorrt_yolov8.utils import engine_builder
+
+    engine_builder.build_engine_from_onnx(
+        "path/to/onnx/model.onnx",
+        "path/to/created/model.engine"
+    )
+    ```
+    This by default exports yolov8s using FP32 and with batch size=1. This operation is required only the first time. The same model engine can then be used multiple times. If the tensorrt version on which the model has been built is different from the one used to run the engine, the library will complain about this. Fix the issue using the above piece of code.
+
+3. Run the exported model and perform inference with 
+    ```python
+    import cv2
+
+    from tensorrt_yolov8 import TRTYoloV8
+    from tensorrt_yolov8.task.utils import draw_detection_results
+
+    detection = TRTYoloV8("detection", "path/to/model.engine")
+
+    img = cv2.imread("img.jpg")
+    results = detection(img, min_prob=0.5)
+    img_result = draw_detection_results(img, results)
+
+    cv2.imwrite("result.jpg", img_result)
+    ```
+
+4. For additional examples see the files in [Examples](/examples)
+
+# Todos
+
+- [ ] Support for batch sizes greater than 1
+- [ ] Support for Yolo 8.1 OBB (Oriented Bounding Box) (?)
