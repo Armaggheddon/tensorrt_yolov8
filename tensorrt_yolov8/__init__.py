@@ -7,10 +7,9 @@ A small wrapper library that allows to run YoloV8 classification, detection and 
 import os
 import numpy as np
 import tensorrt as trt
-import pycuda.autoinit
 import pycuda.driver as cuda
+import pycuda.autoinit
 import importlib
-import cv2
 
 from tensorrt_yolov8.task import common
 # from .task import classification as cls_task
@@ -94,7 +93,6 @@ class TRTYoloV8():
 
         TRT_LOGGER = trt.Logger(_logger_level[log_level])
         trt.init_libnvinfer_plugins(TRT_LOGGER, "")
-        #runtime = trt.Runtime(TRT_LOGGER)
 
         with open(engine_path, "rb") as f, trt.Runtime(TRT_LOGGER) as runtime:
             engine = runtime.deserialize_cuda_engine(f.read())
@@ -206,7 +204,8 @@ class TRTYoloV8():
     
 
     def __del__(self):
-        self.cfx.pop()
+        try: self.cfx.pop()
+        except: pass
         try: self.engine = [] # releases memory used by engine, otherwise will SegFault
         except: pass
         try: self.context.pop(); del self.context
@@ -223,4 +222,3 @@ class TRTYoloV8():
         self.cuda_outputs = None
         self.bindings = None
 
-        
