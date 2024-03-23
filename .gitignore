@@ -3,3 +3,5 @@ build/
 __pycache__
 examples/*
 !examples/*.py
+!examples/example_mask_results.png
+!examples/example_results.png
