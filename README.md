@@ -1,8 +1,16 @@
-# tensorrt_yolov8
+# tensorrt_yolov8 🏎️💨
 
 Tired of long inference times with your favourite yolov8 models? 
 
-Then this library is for you! Run classification, detection, pose and segmentation yolov8 models as engines by using Nvidia's tensorrt. Seamlessly obtain results or even draw the result overlay on top of the image with just a couple of lines of code.
+Then this library is for you! Run yolov8's classification, detection, pose and segmentation models as engines by using Nvidia's tensorrt. Seamlessly obtain results or even draw the result overlay on top of the image with just a couple of lines of code.
+
+| ![Results example](/examples/example_results.png) |
+|:--:|
+| *Example result overlay for detection, pose and segmentation ([image source](https://unsplash.com/it/foto/persone-vicino-a-castle-IU8E-824a-s))* |
+
+| ![Mask results example](/examples/example_mask_results.png) |
+|:--:|
+| *Example result of the masks obtained from the segmentation model for each object (see [ex_draw_seg_mask.py](/examples/ex_draw_seg_mask.py))* |
 
 # Index
 
@@ -11,6 +19,7 @@ Then this library is for you! Run classification, detection, pose and segmentati
     - [Docker](#docker)
     - [Pip](#pip)
 - [Sample usage](#sample-usage)
+- [Todos](#todos)
 
 # Requirements
 This library makes use of Nvidia's specific features, therefore a Nvidia GPU is required. Additionally a working installation of tensorrt is required ([Link](https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html)). 
