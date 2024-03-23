@@ -11,10 +11,10 @@ if __name__ == "__main__":
     model_path = "yolov8s_b1_fp16_export.engine"
     image_path = "demo_img.jpg"
 
-    classification = TRTYoloV8("detection", model_path)
+    detection = TRTYoloV8("detection", model_path)
 
     image = cv2.imread(image_path)
-    results = classification(image, min_prob=0.5, top_k=3)
+    results = detection(image, min_prob=0.5, top_k=3)
 
     img_result = draw_detection_results(image, results)
 

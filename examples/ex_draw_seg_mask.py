@@ -7,10 +7,10 @@ if __name__ == "__main__":
     model_path = "yolov8s_seg_b1_fp32.engine"
     image_path = "demo_img.jpg"
 
-    classification = TRTYoloV8("segmentation", model_path)
+    segmentation = TRTYoloV8("segmentation", model_path)
 
     image = cv2.imread(image_path)
-    results = classification(image, min_prob=0.5, top_k=3)
+    results = segmentation(image, min_prob=0.5, top_k=3)
 
     # Obtain the per-object segmentation mask with respect to the original image
     masks = get_scaled_segmentation_masks(results, image.shape[:2], wrt_original=True)
