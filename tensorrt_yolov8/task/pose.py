@@ -90,9 +90,9 @@ class PoseResult():
         self.y2 = self.y + self.h
 
         self.keypoints = {}
-        for i in range(0, len(self.KEYPOINT_LABELS)):
+        for i in range(0, len(pose_keypoint_labels)):
             x = keypoints[i * 3]
             y = keypoints[i * 3 + 1]
             v = keypoints[i * 3 + 2]
-            self.keypoints[self.KEYPOINT_LABELS[i]] = KeyPoint(x, y, v, pose_keypoint_labels[i])
+            self.keypoints[pose_keypoint_labels[i]] = KeyPoint(x, y, v, pose_keypoint_labels[i])
         
