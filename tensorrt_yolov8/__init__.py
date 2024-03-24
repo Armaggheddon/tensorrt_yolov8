@@ -1,7 +1,9 @@
 """
 tensorrt_yolov8 
 
-A small wrapper library that allows to run YoloV8 classification, detection and pose models exported as TensorRT engine
+A small wrapper library that allows to run YoloV8 
+classification, detection, pose and segmentation 
+models exported as TensorRT engine natively.
 """
 
 import os
@@ -12,10 +14,6 @@ import pycuda.autoinit
 import importlib
 
 from tensorrt_yolov8.task import common
-# from .task import classification as cls_task
-# from .task import detection as det_task
-# from .task import pose as pose_task
-# from .task import segmentation as seg_task
 
 
 __version__ = "1.0"
@@ -26,7 +24,8 @@ _model_types = [
     "classification",
     "detection",
     "pose",
-    "segmentation"
+    "segmentation",
+    # "obb", # TODO: implement
 ]
 
 _logger_level = {
