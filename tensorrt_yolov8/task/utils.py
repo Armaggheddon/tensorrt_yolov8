@@ -465,6 +465,24 @@ pose_keypoint_labels = [
         "right-ankle",
     ]
 
+obb_labels = [
+    "plane",
+    "ship",
+    "storage tank",
+    "baseball diamond",
+    "tennis court",
+    "basketball court",
+    "ground track field",
+    "harbor",
+    "bridge",
+    "large vehicle",
+    "small vehicle",
+    "helicopter",
+    "roundabout",
+    "soccer ball field",
+    "swimming pool",
+]
+
 detection_labels = [
     "person",
     "bicycle",
