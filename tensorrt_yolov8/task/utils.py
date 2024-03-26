@@ -1,6 +1,70 @@
 import numpy as np
 import cv2
 
+# OBB utilities
+def get_scaled_obb_bboxes(
+        results: list['ObbResult'],
+        image_shape: tuple[int, int],
+        offset_x: int = 0, offset_y: int = 0
+) -> list[cv2.RotatedRect]:
+    
+    t_h, t_w = image_shape
+    bboxes = []
+
+    for r in results:
+        rect = r.rotated_rect
+        c_x, c_y = rect.center * np.array([t_w, t_h]) + np.array([offset_x, offset_y])
+        w, h = rect.size * np.array([t_w, t_h])
+        bboxes.append(cv2.RotatedRect((c_x, c_y), (w, h), rect.angle))
+    return bboxes
+
+def draw_obb_results(
+        image: np.ndarray,
+        results: list['ObbResult'],
+        draw_label: bool = True,
+        draw_confidence:bool=True,
+        offset_x : int = 0, offset_y : int = 0,
+        scale_x : int = 0, scale_y : int = 0,
+        use_copy : bool = True,
+) -> np.ndarray:
+    
+    img_cp = image.copy() if use_copy else image 
+
+    scaled_bboxes = get_scaled_obb_bboxes(
+        results, 
+        image.shape[:2] if scale_x == 0 or scale_y == 0 else (scale_y, scale_x),
+        offset_x, offset_y
+        )
+    
+    for i, r in enumerate(results):
+        color = (0, 0, 255)
+        rot_rect : cv2.RotatedRect = scaled_bboxes[i]
+        points = rot_rect.points()
+        for i in range(4):
+            cv2.line(img_cp, tuple(map(int, points[i])), tuple(map(int, points[(i+1)%4])), color, 2)
+            
+        min_id = 0
+        if draw_label or draw_confidence:
+            # get the point with the min y coordinate
+            # so that text is not above the bbox edges
+            min_id = np.argmin(points[:, 1], axis=0)
+        
+        if draw_label:
+            cv2.putText(
+                img_cp,
+                f"{r.class_label}",
+                (int(points[min_id, 0]), int(points[min_id, 1]) - 10),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.9, color, 2)
+        if draw_confidence:
+            cv2.putText(
+                img_cp,
+                f"{r.confidence:.2f}",
+                (int(points[min_id][0]), int(points[min_id][1]) - 30),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.9, color, 2)
+    return img_cp
+
 
 # Segmentation utilities
 def get_scaled_segmentation_mask(
@@ -203,7 +267,6 @@ def get_scaled_segmentation_masks(
         masks.append(bbox_mask)
     return masks
 
-
 def get_printable_masks(
         results : list['SegmentationResult'],
         image_shape : tuple[int, int] = None,
@@ -227,8 +290,9 @@ def get_printable_masks(
     
     return result
 
+
 # Detection utilities
-def get_scaled_detection_bbox(
+def get_scaled_detection_bboxes(
         results : list['DetectionResult'], 
         image_shape : tuple[int, int],
         offset_x : int = 0, offset_y : int = 0,
@@ -265,7 +329,7 @@ def draw_detection_results(
         offset_x : int = 0, offset_y : int = 0,
         scale_x : int = 0, scale_y : int = 0,
         use_copy : bool = True,
-):
+) -> np.ndarray:
     """
     Draws the detection results on a copy of the given image. Allows for 
     scaling and offsetting the bboxes, which can be useful if the image is
@@ -293,7 +357,7 @@ def draw_detection_results(
     """
     img_cp = image.copy() if use_copy else image 
 
-    scaled_bboxes = get_scaled_detection_bbox(
+    scaled_bboxes = get_scaled_detection_bboxes(
         results, 
         image.shape[:2] if scale_x == 0 or scale_y == 0 else (scale_y, scale_x),
         offset_x, offset_y
@@ -381,7 +445,7 @@ def draw_pose_results(
         offset_x : int = 0, offset_y : int = 0,
         scale_x : int = 0, scale_y : int = 0,
         use_copy : bool = True,
-):
+) -> np.ndarray:
     """
     Draws the pose results on a copy of the given image. Allows for 
     scaling and offsetting the bboxes and keypoints, which can be useful if the image is
