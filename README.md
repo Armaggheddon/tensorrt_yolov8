@@ -12,6 +12,10 @@ Then this library is for you! Run yolov8's classification, detection, pose and s
 |:--:|
 | *Example result of the masks obtained from the segmentation model for each object (see [ex_draw_seg_mask.py](/examples/ex_draw_seg_mask.py))* |
 
+| ![OBB result example](/examples/example_obb_result.png) |
+|:--:|
+| *Example result overlay for YoloV8.1 with OBB ([image source](https://www.pexels.com/photo/aerial-view-of-dock-near-a-buildings-7692251/))* |
+
 # Index
 
 - [Requirements](#requirements)
@@ -101,4 +105,4 @@ The easiest way to install/use the library is by using the Nvidia's TensorRT doc
 # Todos
 
 - [ ] Support for batch sizes greater than 1
-- [ ] Support for Yolo 8.1 OBB (Oriented Bounding Box) (?)
+- [x] Support for Yolo 8.1 OBB (Oriented Bounding Box)
