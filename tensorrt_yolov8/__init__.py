@@ -25,7 +25,7 @@ _model_types = [
     "detection",
     "pose",
     "segmentation",
-    "obb", # TODO: implement
+    "obb",
 ]
 
 _logger_level = {
