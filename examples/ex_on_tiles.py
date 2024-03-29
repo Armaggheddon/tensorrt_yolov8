@@ -1,5 +1,5 @@
-from tensorrt_yolov8 import TRTYoloV8
-from tensorrt_yolov8.task.utils import (
+from tensorrt_yolov8 import EngineHelper
+from tensorrt_yolov8.models.utils import (
     draw_detection_results, 
     draw_segmentation_results,
     draw_pose_results
@@ -55,9 +55,9 @@ if __name__ == "__main__":
     image_path = "demo_img.jpg"
 
     # load the models
-    detection = TRTYoloV8("detection", det_model_path)
-    segmentation = TRTYoloV8("segmentation", seg_model_path)
-    pose = TRTYoloV8("pose", pose_model_path)
+    detection = EngineHelper("detection", det_model_path)
+    segmentation = EngineHelper("segmentation", seg_model_path)
+    pose = EngineHelper("pose", pose_model_path)
      
     # load the image
     image = cv2.imread(image_path)

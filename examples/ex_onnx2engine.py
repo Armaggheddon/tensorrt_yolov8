@@ -1,4 +1,4 @@
-from tensorrt_yolov8.utils import engine_builder
+from tensorrt_yolov8.engine_utils import engine_builder
 
 if __name__ == "__main__":
     """

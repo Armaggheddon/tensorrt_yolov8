@@ -1,5 +1,5 @@
-from tensorrt_yolov8 import TRTYoloV8
-from tensorrt_yolov8.task.utils import draw_pose_results
+from tensorrt_yolov8 import EngineHelper
+from tensorrt_yolov8.models.utils import draw_pose_results
 
 import cv2
 
@@ -10,7 +10,7 @@ if __name__ == "__main__":
     model_path = "yolov8s_pose_b1_fp32.engine"
     image_path = "demo_img.jpg"
 
-    pose = TRTYoloV8("pose", model_path)
+    pose = EngineHelper("pose", model_path)
   
     image = cv2.imread(image_path)
     results = pose(image, min_prob=0.5, top_k=3)

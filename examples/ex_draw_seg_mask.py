@@ -1,5 +1,5 @@
-from tensorrt_yolov8 import TRTYoloV8
-from tensorrt_yolov8.task.utils import draw_segmentation_results, get_scaled_segmentation_masks, get_printable_masks
+from tensorrt_yolov8 import EngineHelper
+from tensorrt_yolov8.models.utils import draw_segmentation_results, get_scaled_segmentation_masks, get_printable_masks
 
 import cv2
 
@@ -7,7 +7,7 @@ if __name__ == "__main__":
     model_path = "yolov8s_seg_b1_fp32.engine"
     image_path = "demo_img.jpg"
 
-    segmentation = TRTYoloV8("segmentation", model_path)
+    segmentation = EngineHelper("segmentation", model_path)
 
     image = cv2.imread(image_path)
     results = segmentation(image, min_prob=0.5, top_k=3)
