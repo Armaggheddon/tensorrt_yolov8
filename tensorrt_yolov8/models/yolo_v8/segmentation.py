@@ -2,8 +2,8 @@ import numpy as np
 import cv2
 from typing import List
 
-from core.models.base import ModelBase
-from core.models.types import ModelResult
+from tensorrt_yolov8.core.models.base import ModelBase
+from tensorrt_yolov8.core.models.types import ModelResult
 from .common import yolo_preprocess
 from .labels import DETECTION_LABELS
 
@@ -21,8 +21,8 @@ class Segmentation(ModelBase):
 
     def __init__(
             self,
-            input_shapes: list[tuple[int, int, int]],
-            output_shapes: list[tuple[int, int, int]],
+            input_shapes: List[tuple[int, int, int]],
+            output_shapes: List[tuple[int, int, int]],
     ):
 
         self.input_shape = input_shapes[0]
@@ -67,12 +67,18 @@ class Segmentation(ModelBase):
 
         bboxes = detections[:4, :].astype(int)
 
+        # Returned indexes are sorted in descending
+        # order of score (scores)
         indexes = cv2.dnn.NMSBoxes(
             bboxes=bboxes.T.tolist(), 
             scores=scores.astype(float).tolist(), 
             score_threshold=min_prob, 
             nms_threshold=nms_score
         )
+
+        _take = min(top_k, len(indexes))
+        if _take != len(indexes):
+            indexes = indexes[:_take]
 
         result = []
 
@@ -115,3 +121,58 @@ class Segmentation(ModelBase):
             )
 
         return result
+
+    def draw_results(self, image: np.ndarray, results: List[ModelResult], **kwargs) -> np.ndarray:
+
+        img_overlay = image.copy()
+
+        for res in results:
+            if res.model_type != Segmentation.model_type: continue
+
+            # draw bbox
+            cv2.rectangle(
+                img_overlay,
+                (res.x, res.y),
+                (res.x + res.w, res.y + res.h),
+                (0, 255, 0),
+                2
+            )
+
+            cv2.putText(
+                img_overlay,
+                f"{res.label_name} {res.confidence:.2f}",
+                (res.x, res.y-10),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (0, 255, 0),
+                2
+            )
+
+            # get the mask specific for the object
+            scale_x, scale_y = self.output_shapes[0][2]/self.src_img_w, self.output_shapes[0][3]/self.src_img_h
+            n_x1, n_y1, n_w, n_h = res.x*scale_x, res.y*scale_y, res.w*scale_x, res.h*scale_y
+
+            bbox_mask = res.segmentation_mask[
+                int(n_y1):int(n_y1+n_h),
+                int(n_x1):int(n_x1+n_w)
+            ]
+
+            # resize mask to original bbox size
+            bbox_mask = cv2.resize(bbox_mask, (res.w, res.h), interpolation=cv2.INTER_LINEAR) # INTER_NEAREST, is faster but produces jagged edges in mask overlay
+            bbox_mask = (bbox_mask > 0.5).astype(np.uint8)
+
+            colored_mask = np.moveaxis(
+                np.expand_dims(bbox_mask, axis=0).repeat(3, axis=0), 0, -1
+            )
+
+            masked = np.ma.MaskedArray(
+                img_overlay[res.y:res.y+res.h, res.x:res.x+res.w],
+                mask=colored_mask,
+                fill_value=(0, 255, 0)).filled()
+            
+            img_overlay[res.y:res.y+res.h, res.x:res.x+res.w] = cv2.addWeighted(
+                img_overlay[res.y:res.y+res.h, res.x:res.x+res.w], 0.7,
+                masked, 0.3, 0
+            )
+
+        return img_overlay
