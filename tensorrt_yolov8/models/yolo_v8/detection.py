@@ -2,8 +2,8 @@ import numpy as np
 import cv2
 from typing import List
 
-from core.models.base import ModelBase
-from core.models.types import ModelResult
+from tensorrt_yolov8.core.models.base import ModelBase
+from tensorrt_yolov8.core.models.types import ModelResult
 from .common import yolo_preprocess
 from .labels import DETECTION_LABELS
 
@@ -14,8 +14,8 @@ class Detection(ModelBase):
 
     def __init__(
             self,
-            input_shapes: list[tuple[int, int, int]],
-            output_shapes: list[tuple[int, int, int]],
+            input_shapes: List[tuple[int, int, int]],
+            output_shapes: List[tuple[int, int, int]],
             **kwargs
     ):
         self.labels = DETECTION_LABELS
@@ -23,12 +23,12 @@ class Detection(ModelBase):
         self.output_shape = output_shapes[0] # has format (b, 84, 8400) if model is base
     
     def preprocess(self, image: np.ndarray, **kwargs) -> np.ndarray:
-        self.src_img_h, self.src_img_w = self.image_shape[:2] # has format (h, w, c), get only h and w
+        self.src_img_h, self.src_img_w = image.shape[:2] # has format (h, w, c), get only h and w
         return yolo_preprocess(image, to_shape=self.input_shape, swap_rb=True)
     
     def postprocess(self, output: np.ndarray, min_prob: float, top_k: int, **kwargs) -> List[ModelResult]:
 
-        nms_score = kwargs.get("nms_score", 0.4)
+        nms_score = kwargs.get("nms_score", 0.25)
 
         m_outputs = np.reshape(output[0], self.output_shape)
 
@@ -66,14 +66,21 @@ class Detection(ModelBase):
         m_outputs[1, :] -= m_outputs[3, :] / 2
         bboxes = m_outputs[:4, :].astype(int)
 
+        # Returned indexes are sorted in descending 
+        # order of confidence score (scores)
         indexes = cv2.dnn.NMSBoxes(
             bboxes=bboxes.T.tolist(),
             scores=scores.astype(float).tolist(),
             score_threshold=min_prob,
             nms_threshold=nms_score,
-            top_k=top_k
+            # top_k=top_k # not the top_k that we want
         )     
         
+        # filter out top_k
+        _take = min(top_k, len(indexes))
+        if _take != len(indexes):
+            indexes = indexes[:_take]
+
         results = []
 
         for index in indexes:
@@ -82,7 +89,8 @@ class Detection(ModelBase):
 
             box = bboxes[:, i]
             results.append(
-
+                # TODO: handle case for custom yolo model where label might be more than 80
+                # e.g. use label_name="" if label_id > 80
                 ModelResult(
                     model_type=Detection.model_type,
                     label_id=class_ids.item(i),
@@ -98,3 +106,29 @@ class Detection(ModelBase):
             )
 
         return results
+    
+    def draw_results(self, image: np.ndarray, results: List[ModelResult], **kwargs) -> np.ndarray:
+
+        img_overlay = image.copy()
+
+        for res in results:
+            if res.model_type != Detection.model_type: continue
+
+            cv2.rectangle(
+                img_overlay,
+                (res.x1, res.y1),
+                (res.x2, res.y2),
+                (0, 255, 0),
+                2
+            )
+            cv2.putText(
+                img_overlay,
+                f"{res.label_name} {res.confidence:.2f}",
+                (res.x1, res.y1-10),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (0, 255, 0),
+                2
+            )
+        
+        return img_overlay
