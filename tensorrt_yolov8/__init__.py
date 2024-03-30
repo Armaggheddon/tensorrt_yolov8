@@ -11,8 +11,9 @@ import numpy as np
 import importlib
 from typing import List
 
-# from tensorrt_yolov8.models import common
-
+from tensorrt_yolov8.engine_utils.engine_helper import EngineHelper
+from tensorrt_yolov8.core.models.types import ModelResult
+from tensorrt_yolov8.core.models.base import ModelBase
 
 
 __version__ = "1.0"
@@ -27,9 +28,6 @@ _model_types = [
     "obb",
 ]
 
-from engine_utils.engine_helper import EngineHelper
-from core.models.types import ModelResult
-from core.models.base import ModelBase
 
 class Pipeline():
 
@@ -47,7 +45,7 @@ class Pipeline():
         self.__engine = EngineHelper(model_path)
 
         self.__model: ModelBase = getattr(
-            importlib.import_module(f"models.yolo_v8.{model_type}"), model_type.capitalize()
+            importlib.import_module(f"tensorrt_yolov8.models.yolo_v8.{model_type}"), model_type.capitalize()
         )(
             input_shapes=self.__engine.input_shapes, 
             output_shapes=self.__engine.output_shapes
@@ -70,20 +68,6 @@ class Pipeline():
     def draw_results(
             self,
             image: np.ndarray,
-            results: list[ModelResult],
-    ):
+            results: List[ModelResult],
+    ) -> np.ndarray:
         return self.__model.draw_results(image, results)
-
-if __name__ == "__main__":
-
-    pipe = Pipeline("segmentation", "/home/Documents/Experiments/TENSORRT/tensorrt_yolov8/examples/yolov8s_seg_b1_fp32.engine")
-
-    import cv2
-
-    img = cv2.imread("/home/Documents/Experiments/TENSORRT/tensorrt_yolov8/examples/demo_img.jpg")
-
-    result = pipe(img, top_k=5)
-
-    for r in result:
-        print(r)
-
