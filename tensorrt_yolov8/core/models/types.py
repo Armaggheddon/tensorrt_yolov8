@@ -1,4 +1,4 @@
-from typing import Dict, NewType, TypedDict, Union, Tuple, List
+from typing import Dict, List
 import numpy as np
 
 
@@ -36,7 +36,7 @@ class ModelResult(dict):
     label_name: str
     confidence: float
     box: BoundingBox
-    keypoints: list[PosePoint]
+    keypoints: List[PosePoint]
     segmentation_mask: np.ndarray
 
     def __getattr__(self, attr):
