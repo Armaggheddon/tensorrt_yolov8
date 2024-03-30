@@ -1,11 +1,11 @@
 from typing import List, Tuple
 import numpy as np
+import cv2
 
-from core.models.base import ModelBase
-from core.models.types import ModelResult
+from tensorrt_yolov8.core.models.base import ModelBase
+from tensorrt_yolov8.core.models.types import ModelResult
 from .common import yolo_preprocess
 from .labels import CLASSIFICATION_LABELS
-
 
 
 class Classification(ModelBase):
@@ -58,9 +58,11 @@ class Classification(ModelBase):
         ]
         
         return results
-
-    def predict(self, predictions=np.ndarray, **kwargs) -> tuple[np.ndarray, ...]:
-        pass
     
-    def draw_results(self, image : np.ndarray, results : list[ModelResult], **kwargs) -> np.ndarray:
-        pass
+    def draw_results(self, image : np.ndarray, results : List[ModelResult], **kwargs) -> np.ndarray:
+        
+        for res in results:
+            label = f"{res.label_name} @ {res.confidence*100:.1f}%"
+            cv2.putText(image, label, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        
+        return image
