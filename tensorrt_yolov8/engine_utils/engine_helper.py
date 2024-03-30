@@ -1,3 +1,5 @@
+from typing import List
+
 import tensorrt as trt
 import pycuda.driver as cuda
 import pycuda.autoinit
@@ -82,7 +84,7 @@ class EngineHelper():
         self.bindings = bindings
     
 
-    def infer(self, input_matrix : np.ndarray, **kwargs) -> list:
+    def infer(self, input_matrix : np.ndarray, **kwargs) -> List[np.ndarray]:
         
         self.cfx.push()
 
