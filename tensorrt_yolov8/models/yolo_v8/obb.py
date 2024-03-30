@@ -2,8 +2,8 @@ import numpy as np
 import cv2
 from typing import List
 
-from core.models.base import ModelBase
-from core.models.types import ModelResult
+from tensorrt_yolov8.core.models.base import ModelBase
+from tensorrt_yolov8.core.models.types import ModelResult
 from .common import yolo_preprocess
 from .labels import OBB_LABELS
 
@@ -21,8 +21,8 @@ class Obb(ModelBase):
 
     def __init__(
             self,
-            input_shapes: list[tuple[int, int, int]],
-            output_shapes: list[tuple[int, int, int]],
+            input_shapes: List[tuple[int, int, int]],
+            output_shapes: List[tuple[int, int, int]],
     ):
         self.labels = OBB_LABELS
 
@@ -72,8 +72,12 @@ class Obb(ModelBase):
             scores=scores.astype(float).tolist(),
             score_threshold=min_prob,
             nms_threshold=nms_score,
-            top_k=top_k
+            # top_k=top_k
         )
+
+        _take = min(top_k, len(indexes))
+        if _take != len(indexes):
+            indexes = indexes[:_take]
 
         results = []
 
@@ -110,3 +114,35 @@ class Obb(ModelBase):
             )
         
         return results
+    
+    def draw_results(self, image : np.ndarray, results : List[ModelResult], **kwargs) -> np.ndarray:
+
+        img_overlay = image.copy()
+
+        for res in results:
+            if res.model_type != Obb.model_type: continue
+
+            points = np.array([
+                [res.x1, res.y1],
+                [res.x2, res.y2],
+                [res.x3, res.y3],
+                [res.x4, res.y4]
+            ], np.int32)
+
+            cv2.polylines(img_overlay, [points], isClosed=True, color=(0, 255, 0), thickness=2)
+
+
+            # get the point with min y so that text is visible
+            # and completely outside the box
+            text_x, text_y = points[np.argmin(points[:, 1])]
+            cv2.putText(
+                img_overlay,
+                f"{res.class_label} {res.confidence:.2f}",
+                (text_x, text_y-10),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1.0,
+                (0, 255, 0),
+                2
+            )
+        
+        return img_overlay
