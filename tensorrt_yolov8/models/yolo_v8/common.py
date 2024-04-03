@@ -1,8 +1,9 @@
+from typing import List
 import numpy as np
 import cv2
 
 def yolo_preprocess(
-        image : np.ndarray, 
+        *images : np.ndarray, 
         to_shape : np.ndarray,
         swap_rb : bool = False) -> np.ndarray:
     """
@@ -14,16 +15,20 @@ def yolo_preprocess(
     - images -- preprocessed images as a 1D array
     """
 
-    size_x, size_y = to_shape[2:]
-
-    def base_transform(image : np.ndarray) -> np.ndarray:
-        image = cv2.resize(image, (size_x, size_y)).astype(np.float32)
-        if swap_rb:
-            image = image[:, :, ::-1] # BGR to RGB
-        image /= 255.0
-        image = image.transpose((2, 0, 1)) # HWC to CHW
-        return np.ascontiguousarray(image).ravel()
-
-    image = base_transform(image)
+    if len(images) == 0 or len(images) > to_shape[0]:
+            raise ValueError(f"The number of images provided is too large: got {len(images)} images, expected at most {to_shape[0]} images.")
     
-    return image
+    # resize to shape x, y
+    preproc_images = [cv2.resize(img, (to_shape[2], to_shape[3])).astype(np.float32) for img in images]
+    preproc_images = np.array(preproc_images, dtype=np.float32)
+    if swap_rb:
+        preproc_images = preproc_images[:, :, :, ::-1] # BGR to RGB
+    preproc_images /= 255.0
+    preproc_images = preproc_images.transpose((0, 3, 1, 2)) # BHWC to BCHW
+    
+    # Pad batch with zeros if necessary
+    if preproc_images.shape[0] < to_shape[0]:
+        preproc_images = np.concatenate([preproc_images, np.zeros((to_shape[0] - preproc_images.shape[0], *preproc_images.shape[1:]), dtype=np.float32)], axis=0)
+    
+    preproc_images = np.ascontiguousarray(np.asarray(preproc_images)).ravel()
+    return preproc_images

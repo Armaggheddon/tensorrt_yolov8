@@ -24,14 +24,13 @@ class Obb(ModelBase):
             input_shapes: List[tuple[int, int, int]],
             output_shapes: List[tuple[int, int, int]],
     ):
-        self.labels = OBB_LABELS
 
         self.input_shape = input_shapes[0]
         self.output_shape = output_shapes[0]
 
     def preprocess(self, image : np.ndarray, **kwargs) -> np.ndarray:
         self.src_img_h, self.src_img_w = image.shape[:2]
-        return yolo_preprocess(image, self.input_shape, True)
+        return yolo_preprocess(image, to_shape=self.input_shape, swap_rb=True)
     
     def postprocess(self, output: np.ndarray, min_prob: float, top_k: int, **kwargs) -> List[ModelResult]:
         

@@ -18,22 +18,21 @@ class Classification(ModelBase):
             output_shapes: List[Tuple[int, int, int]],
             **kwargs
     ) -> None:
-        self.labels = CLASSIFICATION_LABELS
 
         # YoloV8 classification has only 1 input and 1 output
         # therefore we can safely assume that the first element
         # of the input_shapes and output_shapes list is the one
         # we are interested in
-        self.input_shapes = input_shapes[0]
-        self.output_shapes = output_shapes[0]
+        self.input_shape = input_shapes[0]
+        self.output_shape = output_shapes[0]
 
     def preprocess(self, image : np.ndarray, **kwargs) -> np.ndarray:
-        return yolo_preprocess(image, self.input_shapes, True)
+        return yolo_preprocess(image, to_shape=self.input_shape, swap_rb=True)
 
 
     def postprocess(self, output: np.ndarray, min_prob: float, top_k: int, **kwargs) -> List[ModelResult]:
 
-        m_outputs = np.reshape(output[0], self.output_shapes)
+        m_outputs = np.reshape(output[0], self.output_shape)
 
         if m_outputs.shape[0] > 1:
             # output is batched

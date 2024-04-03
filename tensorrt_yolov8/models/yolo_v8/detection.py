@@ -18,7 +18,6 @@ class Detection(ModelBase):
             output_shapes: List[tuple[int, int, int]],
             **kwargs
     ):
-        self.labels = DETECTION_LABELS
         self.input_shape = input_shapes[0] # has format (b, 3, 640, 640) if model is base
         self.output_shape = output_shapes[0] # has format (b, 84, 8400) if model is base
     
@@ -26,8 +25,8 @@ class Detection(ModelBase):
         self.src_img_h, self.src_img_w = image.shape[:2] # has format (h, w, c), get only h and w
         return yolo_preprocess(image, to_shape=self.input_shape, swap_rb=True)
     
-    def postprocess(self, output: np.ndarray, min_prob: float, top_k: int, **kwargs) -> List[ModelResult]:
 
+    def postprocess(self, output: np.ndarray, min_prob: float, top_k: int, **kwargs) -> List[ModelResult]:
         nms_score = kwargs.get("nms_score", 0.25)
 
         m_outputs = np.reshape(output[0], self.output_shape)
