@@ -1,6 +1,9 @@
 import tensorrt as trt
 
-
+# TODO: different batch sizes for min, opt, max
+# still result in engine with batch size 1...
+# using trtexec with --minShapes=input_layer_name:4x3x640x640
+# works as expected and sets the batch size to 4
 def build_engine_from_onnx(
 		onnx_path:str,
 		save_engine_path:str,
