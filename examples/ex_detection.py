@@ -9,7 +9,6 @@ if __name__ == "__main__":
     image = cv2.imread(image_path)
 
     det_pipe = Pipeline("detection", model_path)
-
     results = det_pipe(image, min_prob=0.5, top_k=3)
 
     img_result = det_pipe.draw_results(image, results)
