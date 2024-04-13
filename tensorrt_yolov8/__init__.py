@@ -9,7 +9,7 @@ models exported as TensorRT engine natively.
 import os
 import numpy as np
 import importlib
-from typing import List
+from typing import List, Union
 
 from tensorrt_yolov8.engine_utils.engine_helper import EngineHelper
 from tensorrt_yolov8.core.models.types import ModelResult
@@ -53,13 +53,15 @@ class Pipeline():
 
     def __call__(
             self,
-            image: np.ndarray,
+            images: Union[np.ndarray, List[np.ndarray]],
             min_prob: float = 0.5,
             top_k: int = 300,
             **kwargs
-    ) -> List[ModelResult]:
+    ) -> List[List[ModelResult]]:
         
-        preprocess = self.__model.preprocess(image)
+        if isinstance(images, np.ndarray):
+            images = [images]
+        preprocess: List[np.ndarray] = self.__model.preprocess(images)
         predictions = self.__engine.infer(preprocess)
         postprocessed = self.__model.postprocess(predictions, min_prob, top_k, **kwargs)
 
@@ -67,7 +69,10 @@ class Pipeline():
     
     def draw_results(
             self,
-            image: np.ndarray,
+            images: Union[np.ndarray, List[np.ndarray]],
             results: List[ModelResult],
-    ) -> np.ndarray:
-        return self.__model.draw_results(image, results)
+    ) -> List[np.ndarray]:
+        
+        if isinstance(images, np.ndarray):
+            images = [images]
+        return self.__model.draw_results(images, results)
