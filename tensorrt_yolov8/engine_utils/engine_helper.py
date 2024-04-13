@@ -37,7 +37,13 @@ class EngineHelper():
                 f"Most likely the engine was built with a version of TensorRT different from {trt.__version__}.\n"\
                 f"Please rebuild the engine with the correct version of TensorRT and try again")
         context = engine.create_execution_context()
+
+        # If engine.get_tensor_shape(engine[0])[0] == -1, then the engine is dynamic
+        # in this case the input shape has to be set before running inference
+        # in the infer method, as well as pre-allocate the input and output buffers
         context.set_input_shape(engine[0], engine.get_tensor_shape(engine[0]))
+
+        print(f"Input shape: {engine.get_tensor_shape(engine[0])}")
 
         host_inputs  = []
         cuda_inputs  = []
@@ -84,7 +90,7 @@ class EngineHelper():
         self.bindings = bindings
     
 
-    def infer(self, input_matrix : np.ndarray, **kwargs) -> List[np.ndarray]:
+    def infer(self, input_matrix : List[np.ndarray], **kwargs) -> List[np.ndarray]:
         
         self.cfx.push()
 
