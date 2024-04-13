@@ -1,5 +1,65 @@
 import tensorrt as trt
 
+def build_engine_from_onnx2(
+		onnx_path:str,
+		save_engine_path:str,
+		shape=(1, 3, 640, 640),
+		dynamic:bool=False,
+		half:bool=False,
+		verbose:bool=False,
+):
+	
+	# TODO: check input parameters
+ 
+	logger = trt.Logger(trt.Logger.INFO)
+	
+	if verbose:
+		logger.min_severity = trt.Logger.Severity.VERBOSE
+
+	builder = trt.Builder(logger)
+	config = builder.create_builder_config()
+
+	workspace_size_gb = 1
+	config.max_workspace_size = int(workspace_size_gb * (1 << 30))
+
+	flag = 1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
+	network = builder.create_network(flag)
+	parser = trt.OnnxParser(network, logger)
+	if not parser.parse_from_file(onnx_path):
+		raise RuntimeError("Failed to parse ONNX file")
+	
+	inputs = [network.get_input(i) for i in range(network.num_inputs)]
+	outputs = [network.get_output(i) for i in range(network.num_outputs)]
+	for inp in inputs:
+		print(f"[INPUTS] {inp.name} with shape {inp.shape} of type {inp.dtype}")
+	for out in outputs:
+		print(f"[OUTPUTS] {out.name} with shape {out.shape} of type {out.dtype}")
+
+	if dynamic:
+		if shape[0] <= 1:
+			print("Dynamic=True model requires max batch size, i.e. 'batch=16'")
+		
+		profile = builder.create_optimization_profile()
+		for inp in inputs:
+			profile.set_shape(inp.name, min=(1, *shape[1:]), opt=(max(1, shape[0] // 2), *shape[1:]), max=shape)
+		config.add_optimization_profile(profile)
+	
+	half = True
+	if builder.platform_has_fast_fp16 and half:
+		config.set_flag(trt.BuilderFlag.FP16)
+
+	# int8 = False
+	# if builder.platform_has_fast_int8 and int8:
+	# 	config.set_flag(trt.BuilderFlag.INT8)
+	# 	# missing calibrator!! see how
+	# 	config.int8_calibrator = 
+ 
+	with builder.build_engine(network, config) as engine, open(save_engine_path, "wb") as f:
+		f.write(engine.serialize())
+		print(f"Engine built and saved to {save_engine_path}")
+
+
+
 # TODO: different batch sizes for min, opt, max
 # still result in engine with batch size 1...
 # using trtexec with --minShapes=input_layer_name:4x3x640x640
@@ -71,3 +131,16 @@ def build_engine_from_onnx(
 			f.write(engine)
 
 		print(f"Engine built and saved to {save_engine_path}")
+
+if __name__ == "__main__":
+
+	onnx_path = "/home/Documents/Experiments/TENSORRT/tensorrt_yolov8/examples/yolov8s.onnx"
+	engine_path = "/home/Documents/Experiments/TENSORRT/tensorrt_yolov8/examples/m_export_yolov8s_fp16_dynamic.onnx"
+
+	build_engine_from_onnx2(
+		onnx_path=onnx_path,
+		save_engine_path=engine_path,
+		shape=(4, 3, 640, 640),
+		dynamic=True,
+		half=False,
+	)
