@@ -1,5 +1,12 @@
 from typing import Dict, List
 import numpy as np
+from dataclasses import dataclass
+
+
+@dataclass
+class ImgSize:
+    w: int
+    h: int
 
 
 class BoundingBox(dict):
