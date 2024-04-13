@@ -16,10 +16,10 @@ if __name__ == "__main__":
 
     cv2.imwrite(
         f"{image_path.split('.jpg')[0]}_cls.jpg", 
-        img_out
+        img_out[0]
     )
 
-    for res in results:
+    for res in results[0]:
         print(f"[{res.label_id}] {res.label_name} @ {res.confidence:.2f}")
 
 

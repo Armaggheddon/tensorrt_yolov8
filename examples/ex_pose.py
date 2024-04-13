@@ -16,4 +16,4 @@ if __name__ == "__main__":
 
     img_result = det_pipe.draw_results(image, results)
 
-    cv2.imwrite(f"{image_path.split('.jpg')[0]}_pose.jpg", img_result)
+    cv2.imwrite(f"{image_path.split('.jpg')[0]}_pose.jpg", img_result[0])

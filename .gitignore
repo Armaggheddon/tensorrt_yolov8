@@ -8,3 +8,4 @@ examples/*
 !examples/example_obb_result.png
 !examples/dock.jpg
 !examples/demo_img.jpg
+examples/dynamic_batch.py
