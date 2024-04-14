@@ -11,7 +11,7 @@ if __name__ == "__main__":
     det_pipe = Pipeline("detection", model_path)
 
     results = det_pipe(image, min_prob=0.5, top_k=3)
-
+    
     img_result = det_pipe.draw_results(image, results)
 
     cv2.imwrite(f"{image_path.split('.jpg')[0]}_det.jpg", img_result)
