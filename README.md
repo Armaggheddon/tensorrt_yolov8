@@ -83,9 +83,6 @@ The easiest way to install/use the library is by using the Nvidia's TensorRT doc
     )
     ```
     This by default exports yolov8s using FP32 and with batch size=1. This operation is required only the first time. The same model engine can then be used multiple times. If the tensorrt version on which the model has been built is different from the one used to run the engine, the library will complain about this. Fix the issue using the above piece of code.
-    
-    [!WARNING] 
-    This is still work in progress 🚧. Currently the batch size setting does not work correctly and the model is exported using only the minimum batch size only
 
 3. Run the exported model and perform inference with 
     ```python
@@ -104,6 +101,9 @@ The easiest way to install/use the library is by using the Nvidia's TensorRT doc
     ```
 
 4. For additional examples see the files in [Examples](/examples)
+
+>[!WARNING] 
+>Model export is still work in progress 🚧. Currently the batch size setting does not work correctly and the model is exported using only the minimum batch size only
 
 # Todos
 
