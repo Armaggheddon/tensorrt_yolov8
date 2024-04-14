@@ -26,7 +26,7 @@ Then this library is for you! Run yolov8's classification, detection, pose and s
 - [Todos](#todos)
 
 # Requirements
-This library makes use of Nvidia's specific features, therefore a Nvidia GPU is required. Additionally a working installation of tensorrt is required ([Link](https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html)). 
+This library makes use of Nvidia's specific features, therefore a Nvidia GPU, a working installation of tensorrt ([Link](https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html)) and the ONNX files of the model/s are required.
 
 # Installation
 
@@ -83,19 +83,21 @@ The easiest way to install/use the library is by using the Nvidia's TensorRT doc
     )
     ```
     This by default exports yolov8s using FP32 and with batch size=1. This operation is required only the first time. The same model engine can then be used multiple times. If the tensorrt version on which the model has been built is different from the one used to run the engine, the library will complain about this. Fix the issue using the above piece of code.
+    
+    [!NOTE] This is still work in progress 🚧. Currently the batch size setting does not work correctly and the model is exported using only the minimum batch size only
 
 3. Run the exported model and perform inference with 
     ```python
     import cv2
 
-    from tensorrt_yolov8 import TRTYoloV8
-    from tensorrt_yolov8.task.utils import draw_detection_results
+    from tensorrt_yolov8 import Pipeline
 
-    detection = TRTYoloV8("detection", "path/to/model.engine")
+    detection = Pipeline("detection", "path/to/model.engine")
 
     img = cv2.imread("img.jpg")
+    
     results = detection(img, min_prob=0.5)
-    img_result = draw_detection_results(img, results)
+    img_result = detection.draw_results(img, results)
 
     cv2.imwrite("result.jpg", img_result)
     ```
@@ -104,5 +106,6 @@ The easiest way to install/use the library is by using the Nvidia's TensorRT doc
 
 # Todos
 
-- [ ] Support for batch sizes greater than 1
+- [x] Support for different (static) batch sizes
 - [x] Support for Yolo 8.1 OBB (Oriented Bounding Box)
+- [ ] Support for dynamic batch sizes
