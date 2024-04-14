@@ -57,22 +57,31 @@ class Pipeline():
             min_prob: float = 0.5,
             top_k: int = 300,
             **kwargs
-    ) -> List[List[ModelResult]]:
+    ) -> Union[List[ModelResult], List[List[ModelResult]]]:
         
-        if isinstance(images, np.ndarray):
+        is_list = isinstance(images, list)
+        if not is_list:
             images = [images]
+
         preprocess: List[np.ndarray] = self.__model.preprocess(images)
         predictions = self.__engine.infer(preprocess)
         postprocessed = self.__model.postprocess(predictions, min_prob, top_k, **kwargs)
 
-        return postprocessed
+        return postprocessed if is_list else postprocessed[0]
     
     def draw_results(
             self,
             images: Union[np.ndarray, List[np.ndarray]],
-            results: List[ModelResult],
-    ) -> List[np.ndarray]:
-        
-        if isinstance(images, np.ndarray):
+            results: Union[List[ModelResult], List[List[ModelResult]]],
+    ) -> Union[np.ndarray, List[np.ndarray]]:
+
+        is_list = isinstance(images, list)
+        if is_list:
+            assert len(images) == len(results), "The number of images and results must be the same"
+        else:
             images = [images]
-        return self.__model.draw_results(images, results)
+            results = [results]
+        
+        results = self.__model.draw_results(images, results)
+        
+        return results if is_list else results[0]

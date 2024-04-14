@@ -102,12 +102,16 @@ class Detection(ModelBase):
 
         m_outputs = np.reshape(output[0], self.output_shape)
 
-        results = []
-
-        for batch_id in range(m_outputs.shape[0]):
-            results.append(
-                self.__postprocess_batch(m_outputs[batch_id, :, :], batch_id, min_prob, top_k, **kwargs)
-            )
+        results = [
+                self.__postprocess_batch(
+                    m_outputs[batch_id, :, :], 
+                    batch_id, 
+                    min_prob, 
+                    top_k, 
+                    **kwargs
+                )
+                for batch_id in range(len(m_outputs))
+        ]
 
         return results
     
@@ -139,12 +143,9 @@ class Detection(ModelBase):
 
 
     def draw_results(self, images: List[np.ndarray], results: List[List[ModelResult]], **kwargs) -> List[np.ndarray]:
-        imgs_overlay = []
-
-        for batch_id, batch in enumerate(results):
-
-            imgs_overlay.append(
-                self.draw_result(images[batch_id], batch, **kwargs)
-            )
         
+        imgs_overlay = [
+            self.__draw_result(images[batch_id], batch, **kwargs)
+            for batch_id, batch in enumerate(results)
+        ]
         return imgs_overlay

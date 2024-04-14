@@ -3,7 +3,7 @@ import cv2
 from typing import List
 
 from tensorrt_yolov8.core.models.base import ModelBase
-from tensorrt_yolov8.core.models.types import ModelResult
+from tensorrt_yolov8.core.models.types import ModelResult, ImgSize
 from .common import yolo_preprocess
 from .labels import OBB_LABELS
 
@@ -28,25 +28,16 @@ class Obb(ModelBase):
         self.input_shape = input_shapes[0]
         self.output_shape = output_shapes[0]
 
-    def preprocess(self, image : np.ndarray, **kwargs) -> np.ndarray:
-        self.src_img_h, self.src_img_w = image.shape[:2]
-        return yolo_preprocess(image, to_shape=self.input_shape, swap_rb=True)
+    def preprocess(self, images: List[np.ndarray], **kwargs) -> List[np.ndarray]:
+        self.src_imgs_shape = [ImgSize(h=img.shape[0], w=img.shape[1]) for img in images]
+        return [yolo_preprocess(images, to_shape=self.input_shape, swap_rb=True)]
     
-    def postprocess(self, output: np.ndarray, min_prob: float, top_k: int, **kwargs) -> List[ModelResult]:
-        
+
+    def __postprocess_batch(self, output: np.ndarray, batch_id: int, min_prob: float, top_k: int, **kwargs) -> List[ModelResult]:
+
         nms_score = kwargs.get("nms_score", 0.4)
 
-        m_outputs = np.reshape(output[0], self.output_shape)
-
-        if m_outputs.shape[0] > 1:
-            # output is batched
-            pass
-
-        assert m_outputs.shape[0] == 1, "Only batch size 1 is supported"
-
-        m_outputs = m_outputs[0]
-
-        m_outputs = m_outputs[:, np.amax(m_outputs[4:-1, :], axis=0) > min_prob]
+        m_outputs = output[:, np.amax(output[4:-1, :], axis=0) > min_prob]
         class_ids = np.argmax(m_outputs[4:-1, :], axis=0)
         scores = m_outputs[4+class_ids, np.arange(m_outputs.shape[-1])]
 
@@ -54,8 +45,8 @@ class Obb(ModelBase):
         m_outputs[-1, :] *= 180.0/np.pi
 
         # Scale bboxes to target size
-        m_outputs[[0, 2], :] *= self.src_img_w/self.input_shape[2]
-        m_outputs[[1, 3], :] *= self.src_img_h/self.input_shape[3]
+        m_outputs[[0, 2], :] *= self.src_imgs_shape[batch_id].w/self.input_shape[2]
+        m_outputs[[1, 3], :] *= self.src_imgs_shape[batch_id].h/self.input_shape[3]
 
         rotated_boxes = [
             cv2.RotatedRect(
@@ -113,12 +104,30 @@ class Obb(ModelBase):
             )
         
         return results
-    
-    def draw_results(self, image : np.ndarray, results : List[ModelResult], **kwargs) -> np.ndarray:
+
+    def postprocess(self, output: List[np.ndarray], min_prob: float, top_k: int, **kwargs) -> List[List[ModelResult]]:
+        
+        m_outputs = np.reshape(output[0], self.output_shape)
+
+        results = [
+            self.__postprocess_batch(
+                m_outputs[batch_id, :], 
+                batch_id, 
+                min_prob, 
+                top_k, 
+                **kwargs
+            )
+            for batch_id in range(m_outputs.shape[0])
+        ]
+        
+        return results
+
+
+    def __draw_result(self, image: np.ndarray, result: List[ModelResult], **kwargs) -> np.ndarray:
 
         img_overlay = image.copy()
 
-        for res in results:
+        for res in result:
             if res.model_type != Obb.model_type: continue
 
             points = np.array([
@@ -145,3 +154,11 @@ class Obb(ModelBase):
             )
         
         return img_overlay
+    
+    def draw_results(self, images: List[np.ndarray], results : List[List[ModelResult]], **kwargs) -> List[np.ndarray]:
+
+        results = [
+            self.__draw_result(images[batch_id], batch, **kwargs)
+            for batch_id, batch in enumerate(results)
+        ]
+        return results
