@@ -5,6 +5,8 @@ from tensorrt_yolov8 import Pipeline
 if __name__ == "__main__":
 
     model_path = "/home/Documents/Experiments/TENSORRT/tensorrt_yolov8/examples/yolov8s_det_b1_fp16.engine"
+    model_path = "/home/Documents/Experiments/TENSORRT/tensorrt_yolov8/examples/m_export_yolov8s_fp16_dynamic.onnx"
+    # model_path = "/home/Documents/Experiments/TENSORRT/tensorrt_yolov8/examples/v8s_b4_fp32.engine"
     image_path = "/home/Documents/Experiments/TENSORRT/tensorrt_yolov8/examples/demo_img.jpg"
     image = cv2.imread(image_path)
 
