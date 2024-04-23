@@ -103,7 +103,7 @@ The easiest way to install/use the library is by using the Nvidia's TensorRT doc
 4. For additional examples see the files in [Examples](/examples)
 
 >[!WARNING] 
->Model export is still work in progress 🚧. Currently the batch size setting does not work correctly and the model is exported using only the minimum batch size only
+>Model export is still work in progress 🚧. Currently the batch size setting does not work correctly and the model is exported using only the minimum batch size
 
 # Todos
 
