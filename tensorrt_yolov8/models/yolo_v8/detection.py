@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from typing import List
+from typing import List, Tuple
 
 from tensorrt_yolov8.core.models.base import ModelBase
 from tensorrt_yolov8.core.models.types import ModelResult, ImgSize
@@ -14,17 +14,18 @@ class Detection(ModelBase):
 
     def __init__(
             self,
-            input_shapes: List[tuple[int, int, int]],
-            output_shapes: List[tuple[int, int, int]],
+            input_shapes: List[Tuple[int, ...]],
+            output_shapes: List[Tuple[int, ...]],
             **kwargs
     ):
-        self.input_shape = input_shapes[0] # has format (b, 3, 640, 640) if model is base
-        self.output_shape = output_shapes[0] # has format (b, 84, 8400) if model is base
+        # FOR both input and output shapes, batch size is omitted. engine_helper will
+        # handle incorrect batch sizes. The class implementing ModelBase is therefore
+        # only responsible of handling a variable number of images that are guaranteed to
+        # be consistent between the preprocess and postprocess calls
+        self.input_shape = input_shapes[0] # has format (3, 640, 640) if model is base
+        self.output_shape = output_shapes[0] # has format (84, 8400) if model is base
     
     def preprocess(self, images: List[np.ndarray], **kwargs) -> List[np.ndarray]:
-
-        # TODO: check number of images, if too large throw error, if smaller, pad with zeros and save given number
-        # so that in post processing only the batches that match real images are processed
         self.src_imgs_shape = [ ImgSize(h=img.shape[0], w=img.shape[1]) for img in images]
         return [yolo_preprocess(images, to_shape=self.input_shape, swap_rb=True)]
     
@@ -50,8 +51,8 @@ class Detection(ModelBase):
         # move boxes coordinates to top left of image so that
         # 0:4 is like: [x1, y1, w, h]
         # Scale bboxes to target image size
-        m_outputs[[0, 2], :] *= self.src_imgs_shape[batch_id].w/self.input_shape[2]
-        m_outputs[[1, 3], :] *= self.src_imgs_shape[batch_id].h/self.input_shape[3]
+        m_outputs[[0, 2], :] *= self.src_imgs_shape[batch_id].w/self.input_shape[1]
+        m_outputs[[1, 3], :] *= self.src_imgs_shape[batch_id].h/self.input_shape[2]
         m_outputs[0, :] -= m_outputs[2, :] / 2
         m_outputs[1, :] -= m_outputs[3, :] / 2
         bboxes = m_outputs[:4, :].astype(int)
@@ -100,7 +101,8 @@ class Detection(ModelBase):
 
     def postprocess(self, output: List[np.ndarray], min_prob: float, top_k: int, **kwargs) -> List[List[ModelResult]]:
 
-        m_outputs = np.reshape(output[0], self.output_shape)
+        m_outputs = np.reshape(output[0], (-1, *self.output_shape))
+        print(m_outputs.shape)
 
         results = [
                 self.__postprocess_batch(
